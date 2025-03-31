@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Understanding Bottlenecks in Digitisation</title>
+    <style>
+        /* Base Styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            line-height: 1.6;
+            color: #2d3436;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            min-height: 100vh;
+        }
+
+        /* Scene Styles */
+        .scene {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            min-height: 100vh;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin: 0;
+            opacity: 0;
+            transition: opacity 0.7s ease-in-out;
+        }
+
+        .scene.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        /* Cover Page Styles */
+        .cover-page {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            padding: 2rem;
+            text-align: center;
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .cover-title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .cover-subtitle {
+            font-size: 1.8rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 3rem;
+            font-weight: 400;
+            max-width: 600px;
+        }
+
+        .cover-icon {
+            margin: 2rem 0;
+            transform: scale(1.5);
+        }
+
+        .cover-instructions {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 3rem;
+            font-style: italic;
+            animation: pulse 2s infinite;
+        }
+
+        /* Title Styles */
+        .title {
+            font-size: 2.8rem;
+            margin-bottom: 1.2rem;
+            color: #2d3436;
+            font-weight: 700;
+            background: linear-gradient(135deg, #2d3436 0%, #636e72 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            margin-bottom: 3rem;
+            max-width: 800px;
+            color: #636e72;
+            line-height: 1.8;
+        }
+
+        /* Process Flow Styles */
+        .process-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 2rem 0;
+            width: 100%;
+            max-width: 900px;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .character {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1.5rem;
+            position: relative;
+        }
+
+        .icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 0.8rem;
+            position: relative;
+        }
+
+        .person {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+        }
+
+        .robot {
+            background: linear-gradient(135deg, #2c3e50 0%, #2980b9 100%);
+            color: #ecf0f1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            padding: 8px;
+        }
+
+        .robot::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                45deg,
+                transparent 0%,
+                rgba(255, 255, 255, 0.1) 50%,
+                transparent 100%
+            );
+            animation: shine 2s infinite;
+            pointer-events: none;
+        }
+
+        .robot svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+            transition: transform 0.3s ease;
+        }
+
+        .robot:hover svg {
+            transform: scale(1.1);
+        }
+
+        .icon.robot {
+            min-width: 70px;
+            min-height: 70px;
+        }
+
+        .time {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #636e72;
+            padding: 4px 12px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            opacity: 1 !important;
+        }
+
+        .character-robot .time {
+            color: #636e72;
+            background: rgba(255, 255, 255, 0.95);
+            font-weight: 600;
+        }
+
+        .arrow {
+            width: 120px;
+            height: 4px;
+            background: linear-gradient(90deg, #95a5a6 0%, #bdc3c7 100%);
+            position: relative;
+            margin: 0 15px;
+        }
+
+        .arrow::after {
+            content: '';
+            position: absolute;
+            right: -6px;
+            top: -8px;
+            border: 10px solid transparent;
+            border-left-color: #bdc3c7;
+        }
+
+        /* Bottleneck Styles */
+        .bottleneck .icon {
+            box-shadow: 0 0 0 4px rgba(241, 196, 15, 0.8),
+                        0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .idle {
+            opacity: 0.7;
+        }
+
+        .idle .icon::after {
+            content: '...';
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            color: #95a5a6;
+            letter-spacing: 1px;
+            line-height: 1;
+            padding-bottom: 4px;
+        }
+
+        /* Comparison Styles */
+        .comparison-table {
+            width: 100%;
+            max-width: 800px;
+            margin: 2rem 0;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background-color: white;
+        }
+
+        .table-row {
+            display: flex;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .table-row.header {
+            background-color: #34495e;
+            color: white;
+            font-weight: bold;
+        }
+
+        .table-cell {
+            padding: 1rem;
+            flex: 1;
+        }
+
+        .table-row.best {
+            background-color: rgba(46, 204, 113, 0.1);
+            position: relative;
+            box-shadow: 0 0 8px rgba(46, 204, 113, 0.4);
+        }
+
+        .checkmark {
+            position: absolute;
+            right: 10px;
+            color: #2ecc71;
+            font-size: 1.5rem;
+        }
+
+        /* Navigation Styles */
+        .navigation {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            z-index: 100;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            margin: 0 auto;
+            width: fit-content;
+        }
+
+        .nav-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+        }
+
+        .progress-indicator {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            color: #2d3436;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Animation Keyframes */
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.8s ease-in-out forwards;
+            opacity: 0;
+        }
+
+        .slide-left {
+            animation: slideLeft 0.6s ease-in-out forwards;
+            opacity: 0;
+        }
+
+        .slide-right {
+            animation: slideRight 0.6s ease-in-out forwards;
+            opacity: 0;
+        }
+
+        .slide-bottom {
+            animation: slideBottom 0.6s ease-in-out forwards;
+            opacity: 0;
+        }
+
+        .zoom-in {
+            animation: zoomIn 0.8s ease-in-out forwards;
+            opacity: 0;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideLeft {
+            from { transform: translateX(-100px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideRight {
+            from { transform: translateX(100px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideBottom {
+            from { transform: translateY(100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes zoomIn {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2rem;
+            }
+            
+            .process-flow {
+                flex-direction: column;
+            }
+            
+            .arrow {
+                transform: rotate(90deg);
+                margin: 20px 0;
+            }
+            
+            .cover-title {
+                font-size: 2.5rem;
+            }
+            
+            .cover-subtitle {
+                font-size: 1.4rem;
+            }
+        }
+
+        /* Executive Intro Slide Styles */
+        .executive-points {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            max-width: 900px;
+            margin: 3rem auto;
+        }
+
+        .exec-point {
+            display: flex;
+            align-items: flex-start;
+            gap: 1.5rem;
+            text-align: left;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+
+        .exec-point:hover {
+            transform: translateX(10px);
+        }
+
+        .point-number {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #3498db;
+            min-width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(52, 152, 219, 0.1);
+            border-radius: 50%;
+        }
+
+        .point-text {
+            font-size: 1.2rem;
+            color: #2d3436;
+            flex: 1;
+            line-height: 1.6;
+            padding-top: 0.5rem;
+        }
+
+        .context-footer {
+            margin-top: 3rem;
+            font-size: 1.2rem;
+            color: #636e72;
+            font-style: italic;
+        }
+
+        /* Responsive adjustments for executive points */
+        @media (max-width: 768px) {
+            .executive-points {
+                gap: 1rem;
+                padding: 0 1rem;
+            }
+
+            .exec-point {
+                padding: 1rem;
+            }
+
+            .point-number {
+                font-size: 1.4rem;
+                min-width: 40px;
+                height: 40px;
+            }
+
+            .point-text {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Cover Page -->
+        <div id="scene0" class="scene active">
+            <div class="cover-page">
+                <h1 class="cover-title fade-in">Bottleneck Analysis</h1>
+                <p class="cover-subtitle fade-in" style="animation-delay: 0.4s;">Strategic Automation for Maximum Impact</p>
+                <div class="cover-icon fade-in" style="animation-delay: 0.8s;">
+                    <div class="icon robot"></div>
+                </div>
+                <p class="cover-instructions fade-in" style="animation-delay: 1.2s;">Click Next to Begin</p>
+            </div>
+        </div>
+        
+        <!-- Scene 0: Executive Intro Slide -->
+        <div id="scene1" class="scene">
+            <h1 class="title">Driving Digitisation? Start Where It Matters Most</h1>
+            
+            <div class="executive-points">
+                <div class="exec-point fade-in" style="animation-delay: 0.3s;">
+                    <div class="point-number">01</div>
+                    <div class="point-text">Many companies are investing heavily in digital tools and automation.</div>
+                </div>
+                
+                <div class="exec-point fade-in" style="animation-delay: 0.6s;">
+                    <div class="point-number">02</div>
+                    <div class="point-text">But transformation often stalls — not because of technology, but because of unseen bottlenecks.</div>
+                </div>
+                
+                <div class="exec-point fade-in" style="animation-delay: 0.9s;">
+                    <div class="point-number">03</div>
+                    <div class="point-text">The real constraints lie in processes, people, and how work actually gets done.</div>
+                </div>
+                
+                <div class="exec-point fade-in" style="animation-delay: 1.2s;">
+                    <div class="point-number">04</div>
+                    <div class="point-text">To succeed, we must first identify and fix the true points of friction — then scale smart solutions.</div>
+                </div>
+            </div>
+            
+            <div class="context-footer fade-in" style="animation-delay: 1.5s;">
+                Let's explore this through a practical example...
+            </div>
+        </div>
+        
+        <!-- Scene 1: Intro - The Current Manual Process -->
+        <section id="scene2" class="scene">
+            <h1 class="title fade-in">Meet A, B, and C</h1>
+            <p class="subtitle fade-in">They each handle a part of a sequential process: A = 10 min, B = 15 min, and C = 5 min.</p>
+            
+            <div class="process-flow">
+                <div class="character character-a slide-left">
+                    <div class="icon person">A</div>
+                    <div class="time">10 min</div>
+                </div>
+                <div class="arrow fade-in"></div>
+                <div class="character character-b slide-bottom" style="animation-delay: 0.2s;">
+                    <div class="icon person">B</div>
+                    <div class="time">15 min</div>
+                </div>
+                <div class="arrow fade-in" style="animation-delay: 0.4s;"></div>
+                <div class="character character-c slide-right" style="animation-delay: 0.4s;">
+                    <div class="icon person">C</div>
+                    <div class="time">5 min</div>
+                </div>
+            </div>
+            
+            <div class="total-time fade-in" style="animation-delay: 1s;">Total = 30 minutes</div>
+        </section>
+
+        <!-- Scene 2: Full Automation Attempt -->
+        <section id="scene3" class="scene">
+            <h1 class="title fade-in">The First Attempt: Full Automation</h1>
+            <p class="subtitle fade-in">We decided to replace the entire process with a single robot that does everything.</p>
+            
+            <div class="process-flow">
+                <div class="character character-robot zoom-in">
+                    <div class="icon robot"></div>
+                    <div class="time">20 min</div>
+                </div>
+            </div>
+            
+            <div class="explanation fade-in" style="animation-delay: 0.8s;">Time: 20 minutes for the entire process.</div>
+        </section>
+
+        <!-- Scene 3: Reality Check – Slower Throughput -->
+        <section id="scene4" class="scene">
+            <h1 class="title fade-in">Wait... That's Actually Slower!</h1>
+            <p class="subtitle fade-in">Even though 20 minutes total seems good, the old manual process was effectively running at the speed of the bottleneck: 15 minutes per cycle. This is a step backward!</p>
+            
+            <div class="process-flow">
+                <div class="character character-robot fade-in">
+                    <div class="icon robot"></div>
+                    <div class="stop-sign fade-in">⛔</div>
+                </div>
+            </div>
+            
+            <div class="comparison">
+                <div class="comparison-item robot slide-in-left">
+                    <div class="comparison-value negative shake">20 min/cycle</div>
+                    <div class="comparison-label">Robot</div>
+                </div>
+                <div class="comparison-item manual slide-in-right">
+                    <div class="comparison-value positive">15 min/cycle</div>
+                    <div class="comparison-label">Manual Process</div>
+                </div>
+            </div>
+            
+            <div class="alert bounce-in" style="animation-delay: 1s;">!</div>
+        </section>
+
+        <!-- Scene 4: Identifying the Bottleneck -->
+        <section id="scene5" class="scene">
+            <h1 class="title fade-in">Let's Analyze the Original Process</h1>
+            <p class="subtitle fade-in">After our automation failure, we realized we needed to identify the bottleneck in the original process.</p>
+            
+            <div class="process-flow">
+                <div class="character character-a fade-in idle">
+                    <div class="icon person">A</div>
+                    <div class="time">10 min</div>
+                </div>
+                <div class="arrow fade-in"></div>
+                <div class="character character-b fade-in bottleneck">
+                    <div class="icon person">B</div>
+                    <div class="time">15 min</div>
+                </div>
+                <div class="arrow fade-in"></div>
+                <div class="character character-c fade-in idle">
+                    <div class="icon person">C</div>
+                    <div class="time">5 min</div>
+                </div>
+            </div>
+            
+            <div class="explanation fade-in" style="animation-delay: 0.8s;">B is the bottleneck at 15 minutes. The entire process is limited by this slowest step.</div>
+        </section>
+
+        <!-- Scene 5: Smarter Move – Automate Only the Bottleneck (B) -->
+        <section id="scene6" class="scene">
+            <h1 class="title fade-in">Automate the True Bottleneck</h1>
+            <p class="subtitle fade-in">Instead of automating everything, let's replace just B's task with a faster robot. Now B can do it in 7 minutes.</p>
+            
+            <div class="process-flow">
+                <div class="character character-a slide-left bottleneck">
+                    <div class="icon person">A</div>
+                    <div class="time">10 min</div>
+                </div>
+                <div class="arrow fade-in"></div>
+                <div class="character character-robot slide-bottom" style="animation-delay: 0.2s;">
+                    <div class="icon robot"></div>
+                    <div class="time">7 min</div>
+                </div>
+                <div class="arrow fade-in" style="animation-delay: 0.4s;"></div>
+                <div class="character character-c slide-right" style="animation-delay: 0.4s;">
+                    <div class="icon person">C</div>
+                    <div class="time">5 min</div>
+                </div>
+            </div>
+            
+            <div class="explanation fade-in" style="animation-delay: 0.8s;">Now A is the slowest step. New cycle time = 10 minutes.</div>
+        </section>
+
+        <!-- Scene 6: Impact Comparison -->
+        <section id="scene7" class="scene">
+            <h1 class="title fade-in">Comparing All Options</h1>
+            
+            <div class="comparison-table">
+                <div class="table-row header fade-in">
+                    <div class="table-cell">Approach</div>
+                    <div class="table-cell">Configuration</div>
+                    <div class="table-cell">Cycle Time</div>
+                </div>
+                <div class="table-row fade-in" style="animation-delay: 0.3s;">
+                    <div class="table-cell">All Manual</div>
+                    <div class="table-cell">A=10, B=15, C=5</div>
+                    <div class="table-cell">15 min cycle</div>
+                </div>
+                <div class="table-row fade-in" style="animation-delay: 0.6s;">
+                    <div class="table-cell">Full Robot</div>
+                    <div class="table-cell">Single Robot</div>
+                    <div class="table-cell negative">20 min cycle</div>
+                </div>
+                <div class="table-row best fade-in" style="animation-delay: 0.9s;">
+                    <div class="table-cell">Partial Automation</div>
+                    <div class="table-cell">Only B Automated</div>
+                    <div class="table-cell positive">10 min cycle</div>
+                    <div class="checkmark bounce-in" style="animation-delay: 1.5s;">✓</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Scene 7: Final Message -->
+        <section id="scene8" class="scene">
+            <div class="final-message">
+                <h1 class="quote scale-in">Target the bottleneck first!</h1>
+                <p class="fade-in" style="animation-delay: 0.5s;">Automation is powerful, but it must be applied where it makes the biggest impact.</p>
+                <p class="fade-in" style="animation-delay: 0.8s;">Sometimes a careful analysis of the process reveals that selective automation is more effective than automating everything.</p>
+            </div>
+            
+            <div class="controls fade-in" style="animation-delay: 1.5s;">
+                <button id="replayBtn" class="control-btn">Replay</button>
+            </div>
+        </section>
+
+        <!-- Navigation -->
+        <div class="navigation">
+            <button id="prevBtn" class="nav-btn">Previous</button>
+            <div class="progress-indicator">
+                <span id="currentScene">1</span>/<span id="totalScenes">8</span>
+            </div>
+            <button id="nextBtn" class="nav-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize scene manager
+            const sceneManager = new SceneManager();
+            
+            // Start with scene 0
+            sceneManager.initializeFirstScene();
+            
+            // Replace robot emojis with SVG
+            replaceRobotEmojis();
+        });
+
+        class SceneManager {
+            constructor() {
+                this.currentScene = 0;
+                this.totalScenes = 9;
+                this.isAnimating = false;
+                
+                // Get DOM elements
+                this.nextBtn = document.getElementById('nextBtn');
+                this.prevBtn = document.getElementById('prevBtn');
+                this.replayBtn = document.getElementById('replayBtn');
+                this.currentSceneIndicator = document.getElementById('currentScene');
+                this.totalScenesIndicator = document.getElementById('totalScenes');
+                this.scenes = document.querySelectorAll('.scene');
+                
+                // Initialize UI
+                this.updateSceneIndicator();
+                this.updateNavigationButtons();
+                this.totalScenesIndicator.textContent = this.totalScenes.toString();
+                
+                // Setup event listeners
+                this.setupEventListeners();
+            }
+            
+            setupEventListeners() {
+                this.nextBtn.addEventListener('click', () => this.nextScene());
+                this.prevBtn.addEventListener('click', () => this.prevScene());
+                
+                if (this.replayBtn) {
+                    this.replayBtn.addEventListener('click', () => this.goToScene(0));
+                }
+                
+                // Keyboard navigation
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'ArrowRight' || e.key === ' ') {
+                        this.nextScene();
+                    } else if (e.key === 'ArrowLeft') {
+                        this.prevScene();
+                    }
+                });
+            }
+            
+            initializeFirstScene() {
+                this.currentSceneIndicator.textContent = '1';
+                this.totalScenesIndicator.textContent = this.totalScenes.toString();
+                this.updateNavigationButtons();
+            }
+            
+            async nextScene() {
+                if (this.isAnimating || this.currentScene >= this.totalScenes - 1) return;
+                
+                this.isAnimating = true;
+                await this.transitionToScene(this.currentScene + 1);
+                this.isAnimating = false;
+            }
+            
+            async prevScene() {
+                if (this.isAnimating || this.currentScene <= 0) return;
+                
+                this.isAnimating = true;
+                await this.transitionToScene(this.currentScene - 1);
+                this.isAnimating = false;
+            }
+            
+            async goToScene(sceneNumber) {
+                if (this.isAnimating || sceneNumber < 0 || sceneNumber > this.totalScenes - 1) return;
+                
+                this.isAnimating = true;
+                await this.transitionToScene(sceneNumber);
+                this.isAnimating = false;
+            }
+            
+            async transitionToScene(newSceneNumber) {
+                const currentSceneEl = document.getElementById(`scene${this.currentScene}`);
+                const nextSceneEl = document.getElementById(`scene${newSceneNumber}`);
+                
+                currentSceneEl.style.opacity = '0';
+                
+                await new Promise(resolve => setTimeout(resolve, 700));
+                
+                currentSceneEl.classList.remove('active');
+                nextSceneEl.classList.add('active');
+                
+                this.resetAnimation(nextSceneEl);
+                
+                this.currentScene = newSceneNumber;
+                nextSceneEl.style.opacity = '1';
+                
+                this.updateSceneIndicator();
+                this.updateNavigationButtons();
+            }
+            
+            resetAnimation(sceneElement) {
+                const animatedElements = sceneElement.querySelectorAll('[class*="fade"], [class*="slide"], [class*="zoom"], [class*="bounce"], [class*="scale"]');
+                
+                animatedElements.forEach(el => {
+                    const originalClasses = el.getAttribute('class');
+                    const animationClasses = originalClasses.split(' ').filter(cls => 
+                        cls.includes('fade') || 
+                        cls.includes('slide') || 
+                        cls.includes('zoom') || 
+                        cls.includes('bounce') || 
+                        cls.includes('scale')
+                    );
+                    
+                    animationClasses.forEach(cls => el.classList.remove(cls));
+                    void el.offsetWidth;
+                    animationClasses.forEach(cls => el.classList.add(cls));
+                });
+            }
+            
+            updateSceneIndicator() {
+                this.currentSceneIndicator.textContent = (this.currentScene + 1).toString();
+            }
+            
+            updateNavigationButtons() {
+                this.prevBtn.style.visibility = this.currentScene === 0 ? 'hidden' : 'visible';
+                this.nextBtn.style.visibility = this.currentScene === this.totalScenes - 1 ? 'hidden' : 'visible';
+            }
+        }
+
+        function replaceRobotEmojis() {
+            const robotSVG = `<svg fill="#ffffff" height="100%" width="100%" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 511.999 511.999" xml:space="preserve"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <g> <path d="M424.464,226.038h-31.289c-4.637,0-8.394,3.758-8.394,8.394v17.485H370.51v-17.485c0-4.636-3.757-8.394-8.394-8.394 h-34.743v-17.351h34.743c4.637,0,8.394-3.758,8.394-8.394V66.121c0-20.285-16.502-36.787-36.787-36.787h-69.329V8.394 c0-4.636-3.757-8.394-8.394-8.394c-4.637,0-8.394,3.758-8.394,8.394v20.939h-69.33c-20.285,0-36.787,16.503-36.787,36.787v134.173 c0,4.636,3.757,8.394,8.394,8.394h34.744v17.351h-34.744c-4.637,0-8.394,3.758-8.394,8.394v17.485h-14.271v-17.485 c0-4.636-3.757-8.394-8.394-8.394h-31.29c-4.637,0-8.394,3.758-8.394,8.394v169.096c0,4.636,3.757,8.394,8.394,8.394h31.289 c4.637,0,8.394-3.758,8.394-8.394V303.215h14.271v68.203c0,4.636,3.757,8.394,8.394,8.394h14.9v75.713h-10.586 c-4.637,0-8.394,3.758-8.394,8.394v39.686c0,4.636,3.757,8.394,8.394,8.394h70.744c4.637,0,8.394-3.758,8.394-8.394v-39.686 c0-4.636-3.757-8.394-8.394-8.394h-10.585v-75.713h83.289v75.713h-10.586c-4.637,0-8.394,3.758-8.394,8.394v39.686 c0,4.636,3.757,8.394,8.394,8.394h70.744c4.637,0,8.394-3.758,8.394-8.394v-39.686c0-4.636-3.757-8.394-8.394-8.394h-10.585 v-75.713h14.9c4.637,0,8.394-3.758,8.394-8.394v-68.203h14.271v100.312c0,4.636,3.757,8.394,8.394,8.394h31.289 c4.637,0,8.394-3.758,8.394-8.394V234.431C432.857,229.796,429.1,226.038,424.464,226.038z M110.43,395.134H95.929V242.826h14.501 V395.134z M141.489,286.428h-14.271v-17.723h14.271V286.428z M158.276,191.9V66.121c0-11.028,8.972-20,20-20h155.447 c11.028,0,20,8.972,20,20V191.9H158.276z M310.586,208.686v17.351H201.414v-17.351H310.586z M216.547,472.314v22.898h-53.957 v-22.898H216.547z M181.571,455.526v-75.713h15.998v75.713H181.571z M349.409,472.314v22.898h-53.957v-22.898H349.409z M314.433,455.526v-75.713h15.998v75.713h0H314.433z M353.723,363.024H158.276V242.826h195.446V363.024z M384.781,286.428H370.51 v-17.723h14.271V286.428z M416.07,395.134h-14.501V242.826h14.501V395.134z"></path> </g> </g> <g> <g> <path d="M204.236,84.744c-20.803,0-37.727,16.924-37.727,37.726c0,20.802,16.924,37.726,37.727,37.726 c20.802,0.001,37.726-16.923,37.726-37.726C241.963,101.668,225.039,84.744,204.236,84.744z M204.236,143.409 c-11.545,0-20.94-9.392-20.94-20.939c0-11.545,9.394-20.939,20.94-20.939c11.545,0,20.939,9.393,20.939,20.939 C225.175,134.016,215.782,143.409,204.236,143.409z"></path> </g> </g> <g> <g> <path d="M307.765,84.744c-20.803,0-37.727,16.924-37.727,37.726c0,20.802,16.924,37.727,37.727,37.727 c20.802,0,37.726-16.924,37.726-37.726S328.567,84.744,307.765,84.744z M307.765,143.409c-11.545,0-20.94-9.393-20.94-20.939 c0-11.545,9.393-20.939,20.94-20.939c11.545,0,20.939,9.393,20.939,20.939C328.703,134.016,319.31,143.409,307.765,143.409z"></path> </g> </g> <g> <g> <path d="M256.001,270.9c-30.317,0-54.982,24.664-54.982,54.982c0,4.636,3.757,8.394,8.394,8.394h93.176 c4.637,0,8.394-3.758,8.394-8.394C310.982,295.565,286.318,270.9,256.001,270.9z M218.735,317.488 c3.835-17.036,19.089-29.8,37.265-29.8c18.177,0,33.43,12.764,37.265,29.8H218.735z"></path> </g> </g> <g> <g> <circle cx="326.744" cy="267.215" r="8.394"></circle> </g> </g> <g> <g> <circle cx="185.257" cy="267.215" r="8.394"></circle> </g> </g> </g></svg>`;
+
+            const robotIcons = document.querySelectorAll('.icon.robot');
+            robotIcons.forEach(icon => {
+                icon.innerHTML = robotSVG;
+            });
+        }
+    </script>
+</body>
+</html> 
