@@ -5,6 +5,9 @@ This is an **interactive, animated HTML presentation** that helps teams and exec
 
 Built as a single HTML file, it's lightweight, visually engaging, and delivers a message that sticks.
 
+Check out the live demo of this project here:  
+👉 [bottleneck_automation Demo](https://carstoneous.github.io/bottleneck_automation/)
+
 ---
 
 ## 🎯 Why This Exists
